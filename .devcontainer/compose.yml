@@ -1,0 +1,18 @@
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+    image: localhost/gogetssl/api:dev
+    container_name: GoGetSslApiDev
+    tty: true
+    networks:
+      - gogetssl
+    volumes:
+      - ../:/usr/local/gogetssl/src
+    environment:
+      - PS1="[\A]\u@ggsapi:\W\\$ "
+networks:
+  gogetssl:
+volumes:
+  gogetssl:
