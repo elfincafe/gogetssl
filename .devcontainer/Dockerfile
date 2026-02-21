@@ -1,14 +1,16 @@
 FROM golang:1.26.0-alpine3.23
 
-ARG GOPATH
-
-ENV GOPATH=${GOPATH:-/usr/local/gogetssl}
+ENV TZ=Asia/Tokyo
 
 RUN apk update && \
     apk add vim \
-            doas && \
+            git \
+            tzdata \
+            doas \
+            openssh-client-default && \
     echo -e "permit nopass :root\npermit nopass :wheel" > /etc/doas.conf && \
     chmod 600 /etc/doas.conf && \
     go install golang.org/x/tools/cmd/goimports@latest
 
-CMD [ "/bin/sh" ]
+WORKDIR ${GOPATH}/src
+CMD ["/bin/sh"]

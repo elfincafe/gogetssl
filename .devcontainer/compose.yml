@@ -11,7 +11,8 @@ services:
     volumes:
       - ../:/usr/local/gogetssl/src
     environment:
-      - PS1="[\A]\u@ggsapi:\W\\$ "
+      - TZ=Asia/Tokyo
+      - GOPATH=/usr/local/gogetssl
 networks:
   gogetssl:
 volumes:
