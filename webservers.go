@@ -10,12 +10,8 @@ import (
 )
 
 type (
-	WebServers struct {
-		LiveAPI string
-		Key     string
-	}
-	WebServersGetResponse struct {
-		WebServers []struct {
+	GetWebServersResponse struct {
+		WebServer []struct {
 			Id       int    `json:"id"`
 			Software string `json:"software"`
 		} `json:"webservers"`
@@ -23,7 +19,7 @@ type (
 	}
 )
 
-func (api *WebServers) Get(supplierId int) (*WebServersGetResponse, error) {
+func (api *Api) GetWebServers(supplierId int) (*GetWebServersResponse, error) {
 	if supplierId < 1 || supplierId > 2 {
 		return nil, errors.New("wrong supplier ID")
 	}
@@ -36,7 +32,7 @@ func (api *WebServers) Get(supplierId int) (*WebServersGetResponse, error) {
 	endpoint.RawQuery = q.Encode()
 
 	var e Error
-	var r WebServersGetResponse
+	var r GetWebServersResponse
 	req := annette.New(endpoint)
 	res, err := req.Get()
 	if err != nil {

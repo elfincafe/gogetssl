@@ -11,18 +11,15 @@ import (
 )
 
 type (
-	Auth struct {
-		LiveAPI string
-	}
 	AuthResponse struct {
-		Key string `json:"key,omitempty"`
+		Key string `json:"key"`
 	}
 )
 
-func (api *Auth) Auth(username, apiPassword string) (*AuthResponse, error) {
+func (api *Api) Auth(username, apiPassword string) error {
 	endpoint, err := url.Parse(fmt.Sprintf("%s/auth", api.LiveAPI))
 	if err != nil {
-		return nil, err
+		return err
 	}
 	body := url.Values{}
 	body.Set("user", username)
@@ -34,20 +31,21 @@ func (api *Auth) Auth(username, apiPassword string) (*AuthResponse, error) {
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	res, err := req.Post(strings.NewReader(body.Encode()))
 	if err != nil {
-		return nil, err
+		return err
 	}
 	if !res.IsStatus200s() {
-		return nil, errors.New(res.Body())
+		return errors.New(res.Body())
 	}
 	resBody := res.Binary()
 
 	err = json.Unmarshal(resBody, &e)
 	if err == nil && e.Error {
-		return nil, fmt.Errorf("%s. %s", e.Message, e.Description)
+		return fmt.Errorf("%s. %s", e.Message, e.Description)
 	}
 	err = json.Unmarshal(resBody, &r)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return &r, nil
+	api.Key = r.Key
+	return nil
 }
