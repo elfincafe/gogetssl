@@ -4,12 +4,24 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"strconv"
 
 	"github.com/elfincafe/annette"
 )
 
 type (
-	OrderGetStatusResponse struct {
+	Order struct {
+		Id     int    `json:"order_id"`
+		Status string `json:"status"`
+	}
+	GetAllSslOrdersResponse struct {
+		Limit   int     `json:"limit"`
+		Offset  int     `json:"offset"`
+		Count   int     `json:"count"`
+		Success bool    `json:"success"`
+		Orders  []Order `json:"orders"`
+	}
+	GetOrderStatusResponse struct {
 		OrderId               int      `json:"order_id"`
 		PartnerOrderId        int      `json:"partner_order_id"`
 		InternalId            string   `json:"internal_id"`
@@ -105,9 +117,11 @@ type (
 		Success   bool `json:"success"`
 		TimeStamp int  `json:"time_stamp"`
 	}
+	ReissueSslOrderResponse struct {
+	}
 )
 
-func (api *Api) GetOrderStatus(orderId int) (*OrderGetStatusResponse, error) {
+func (api *Api) GetOrderStatus(orderId int) (*GetOrderStatusResponse, error) {
 	endpoint, err := url.Parse(fmt.Sprintf("%s/orders/status/%d", api.LiveAPI, orderId))
 	if err != nil {
 		return nil, err
@@ -117,7 +131,47 @@ func (api *Api) GetOrderStatus(orderId int) (*OrderGetStatusResponse, error) {
 	endpoint.RawQuery = q.Encode()
 
 	var e Error
-	var r OrderGetStatusResponse
+	var r GetOrderStatusResponse
+	req := annette.New(endpoint)
+	res, err := req.Get()
+	if err != nil {
+		return nil, err
+	}
+	if !res.IsStatus200s() {
+		err = json.Unmarshal(res.Binary(), &e)
+		if err != nil {
+			return nil, err
+		}
+		return nil, fmt.Errorf("%s. %s", e.Message, e.Description)
+	}
+	resBody := res.Binary()
+	fmt.Println(string(resBody))
+
+	err = json.Unmarshal(resBody, &e)
+	if err == nil && e.Error {
+		return nil, fmt.Errorf("%s. %s", e.Message, e.Description)
+	}
+	err = json.Unmarshal(resBody, &r)
+	if err != nil {
+		return nil, err
+	}
+	return &r, nil
+}
+
+func (api *Api) GetAllSslOrders(limit, offset int) (*GetAllSslOrdersResponse, error) {
+	endpoint, err := url.Parse(fmt.Sprintf("%s/orders/ssl/all", api.LiveAPI))
+	if err != nil {
+		return nil, err
+	}
+	q := url.Values{}
+	q.Set("auth_key", api.Key)
+	q.Set("limit", strconv.Itoa(limit))
+	q.Set("offset", strconv.Itoa(offset))
+	endpoint.RawQuery = q.Encode()
+	fmt.Println(endpoint)
+
+	var e Error
+	var r GetAllSslOrdersResponse
 	req := annette.New(endpoint)
 	res, err := req.Get()
 	if err != nil {
